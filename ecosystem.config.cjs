@@ -4,7 +4,7 @@ module.exports = {
             name: "amadeus",
             script: "app.js",
             watch: true,
-            ignore_watch: ["node_modules", "v1.db", "v1.db-journal"],
+            ignore_watch: ["node_modules", ".git"],
             time: true,
         }
     ],

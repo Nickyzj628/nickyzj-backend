@@ -4,8 +4,8 @@ import { Marked } from "marked";
 import { gfmHeadingId } from "marked-gfm-heading-id";
 import { markedHighlight } from "marked-highlight";
 import sharp from "sharp";
-import { WEBDAV_PATH, WEBDAV_URL } from "../lib/constants.js";
-import { formatQuery, getFiles, to } from "../lib/utils.js";
+import { WEBDAV_PATH, WEBDAV_URL } from "../libs/constants.js";
+import { formatQuery, getFiles, to } from "../libs/utils.js";
 
 /** 博客文件夹在 dufs 的相对路径 */
 const DIR = "/Nickyzj/Blogs";
@@ -38,14 +38,14 @@ let years = [];
 let pages = 0;
 
 const init = async () => {
-    console.time("Route blogs inited");
+    console.time("初始化路由/blogs");
 
     // 读取年份范围
     const files = await getFiles(DIR);
     years = files.map((file) => parseInt(file.name));
     pages = years.length;
 
-    console.timeEnd("Route blogs inited");
+    console.timeEnd("初始化路由/blogs");
 };
 
 init();

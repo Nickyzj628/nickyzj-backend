@@ -1,7 +1,7 @@
 import express from "express";
 import sharp from "sharp";
-import { WEBDAV_PATH } from "../lib/constants.js";
-import { formatQuery, getFiles, to } from "../lib/utils.js";
+import { WEBDAV_PATH } from "../libs/constants.js";
+import { formatQuery, getFiles, to } from "../libs/utils.js";
 
 /** 番剧文件夹在 dufs 的相对路径 */
 const DIR = "/Nickyzj/Animes";
@@ -14,14 +14,14 @@ let seasons = [];
 let pages = 0;
 
 const init = async () => {
-    console.time("Route animes inited");
+    console.time("初始化路由/animes");
 
     // 读取季度列表
     const files = await getFiles(DIR, (data) => data.sort((a, b) => b.name.localeCompare(a.name, "zh")));
     seasons = files.map((file) => file.name);
     pages = seasons.length;
 
-    console.timeEnd("Route animes inited");
+    console.timeEnd("初始化路由/animes");
 };
 
 init();

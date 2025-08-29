@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { to } from "../lib/utils.js";
+import { to } from "../libs/utils.js";
 
 const router = Router();
 const data = {};
@@ -7,6 +7,7 @@ const data = {};
 router.get("/", async (req, res) => {
     if (Object.keys(data).length > 0) {
         res.success(data);
+        return;
     }
 
     const [error, response] = await to(fetch("https://apiv3.shanbay.com/weapps/dailyquote/quote"));

@@ -54,11 +54,28 @@ export const getFiles = async (
     const path = `${WEBDAV_URL}${relativePath}?json`;
     const [error, response] = await to(fetch(path));
     if (error) {
-        console.log(error.message);
+        console.log(`获取目录${relativePath}下的文件列表失败：${error.message}`);
         return [];
     }
 
     const data = (await response.json()).paths;
     const sortedData = sorter(data);
     return sortedData;
+};
+
+/**
+ * 防抖
+ * @param {(...args: any[]) => void} func 
+ * @param {number} delay 距离上次调用多久之后执行函数，默认 1000 毫秒
+ */
+export const debounce = (func, delay = 1000) => {
+    let timer;
+    return (...args) => {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+            func(args);
+        }, delay);
+    };
 };
