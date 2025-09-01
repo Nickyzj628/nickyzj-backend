@@ -1,5 +1,4 @@
 import { Namespace } from "socket.io";
-import { debounce } from "../libs/utils.js";
 
 /**
  * 生成房间号
@@ -40,13 +39,11 @@ const getAllRooms = (nsp) => {
  */
 const rooms = (nsp) => {
     nsp.on("connection", (socket) => {
-        let userName = "";
-        let roomCode = "";
-
         // 创建房间
         socket.on("createRoom", ({ userName: givenUserName }) => {
-            userName = givenUserName;
-            roomCode = generateRoomCode();
+            const roomCode = socket.roomCode = generateRoomCode();
+            const userName = socket.userName = givenUserName;
+            socket.isHost = true;
 
             socket.join(roomCode);
             socket.emit("roomCreated", roomCode);
@@ -57,50 +54,69 @@ const rooms = (nsp) => {
 
         // 加入房间
         socket.on("joinRoom", (givenRoomCode, { userName: givenUserName }) => {
-            userName = givenUserName;
-            roomCode = givenRoomCode;
+            const roomCode = socket.roomCode = givenRoomCode;
+            const userName = socket.userName = givenUserName;
             const isRoomExist = nsp.adapter.rooms.has(roomCode);
-
+            socket.isHost = !isRoomExist;
             socket.join(roomCode);
+
             if (!isRoomExist) {
                 socket.emit("roomCreated", roomCode);
             } else {
                 socket.emit("roomJoined");
-                nsp.to(roomCode).emit("roomMessage", {
-                    userName: "系统消息",
+                nsp.to(roomCode).except(socket.id).emit("roomMessage", {
+                    type: "system",
+                    userName: "创世神",
                     text: `${userName}来了`,
                 });
             }
 
-            console.log(`${userName}加入房间#${roomCode}`);
+            console.log(`${userName}${isRoomExist ? "加入" : "创建"}了房间#${roomCode}`);
         });
 
         // 房间消息
-        socket.on("roomMessage", (roomCode, { userName, text }) => {
-            nsp.to(roomCode).emit("roomMessage", { userName, text });
+        socket.on("roomMessage", (roomCode, { userName, isHost, text }) => {
+            const type = isHost ? "host" : "user";
+            nsp.to(roomCode).emit("roomMessage", { type, userName, text });
             console.log(`${userName}在房间#${roomCode}说: ${text}`);
         });
 
         // 断开连接
         socket.on("disconnect", () => {
-            // 过滤掉无效连接
+            // 过滤无效连接
+            const { userName, roomCode } = socket;
             if (!userName || !roomCode) {
                 return;
             }
+
             console.log(`${userName}离开了房间#${roomCode}`);
 
-            // 房间为空，关闭房间
-            if (!nsp.adapter.rooms.has(roomCode)) {
+            // 房间已经不存在
+            const roomSockets = nsp.adapter.rooms.get(roomCode);
+            if (!roomSockets) {
                 console.log(`房间#${roomCode}已关闭`);
                 console.log(`当前房间列表：${getAllRooms(nsp).map((room) => room.name)}`);
+                return;
             }
-            // 房间非空，通知其他用户有人离开
-            else {
-                nsp.to(roomCode).emit("roomMessage", {
-                    userName: "系统消息",
-                    text: `${userName}走了`,
-                });
+
+            // 房间还在，通知其他用户有人离开
+            nsp.to(roomCode).emit("roomMessage", {
+                type: "system",
+                userName: "创世神",
+                text: `${userName}走了`,
+            });
+
+            // 交接房主权限
+            if (!socket.isHost) {
+                return;
             }
+            const nextHostId = Array.from(roomSockets)[0];
+            const nextHost = nsp.sockets.get(nextHostId);
+            if (nextHost.isHost) {
+                return;
+            }
+            nextHost.isHost = true;
+            nextHost.emit("hostChanged");
         });
     });
 };
