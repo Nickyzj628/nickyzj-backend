@@ -1,5 +1,7 @@
 import { Namespace } from "socket.io";
 
+const SYSTEM_USER_NAME = "NeiKos496";
+
 /**
  * 生成房间号
  * @param {number} length 房间号长度，默认 4 位
@@ -66,7 +68,7 @@ const rooms = (nsp) => {
                 socket.emit("roomJoined");
                 nsp.to(roomCode).except(socket.id).emit("roomMessage", {
                     type: "system",
-                    userName: "创世神",
+                    userName: SYSTEM_USER_NAME,
                     text: `${userName}来了`,
                 });
             }
@@ -75,7 +77,8 @@ const rooms = (nsp) => {
         });
 
         // 房间消息
-        socket.on("roomMessage", (roomCode, { userName, isHost, text }) => {
+        socket.on("roomMessage", ({ userName, isHost, text }) => {
+            const { roomCode } = socket;
             const type = isHost ? "host" : "user";
             nsp.to(roomCode).emit("roomMessage", { type, userName, text });
             console.log(`${userName}在房间#${roomCode}说: ${text}`);
@@ -102,7 +105,7 @@ const rooms = (nsp) => {
             // 房间还在，通知其他用户有人离开
             nsp.to(roomCode).emit("roomMessage", {
                 type: "system",
-                userName: "创世神",
+                userName: SYSTEM_USER_NAME,
                 text: `${userName}走了`,
             });
 
@@ -112,11 +115,44 @@ const rooms = (nsp) => {
             }
             const nextHostId = Array.from(roomSockets)[0];
             const nextHost = nsp.sockets.get(nextHostId);
-            if (nextHost.isHost) {
-                return;
-            }
             nextHost.isHost = true;
             nextHost.emit("hostChanged");
+        });
+
+        /**
+         * 房主视频控制事件
+         */
+
+        socket.on("play", () => {
+            nsp.to(socket.roomCode).except(socket.id).emit("played");
+        });
+
+        socket.on("pause", () => {
+            nsp.to(socket.roomCode).except(socket.id).emit("paused");
+        });
+
+        socket.on("seek", (time) => {
+            nsp.to(socket.roomCode).except(socket.id).emit("seeked", time);
+        });
+
+        socket.on("rateChange", (rate) => {
+            nsp.to(socket.roomCode).except(socket.id).emit("rateChanged", rate);
+        });
+
+        socket.on("epChange", (ep) => {
+            nsp.to(socket.roomCode).except(socket.id).emit("epChanged", ep);
+        });
+
+        socket.on("syncVideo", () => {
+            const { roomCode } = socket;
+            const roomSockets = nsp.adapter.rooms.get(roomCode);
+            const hostId = Array.from(roomSockets)[0];
+
+            nsp.to(hostId).emit("syncVideo", socket.id);
+        });
+
+        socket.on("videoInfo", (targetId, videoInfo) => {
+            nsp.to(targetId).emit("videoInfo", videoInfo);
         });
     });
 };
