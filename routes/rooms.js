@@ -148,10 +148,10 @@ const rooms = (nsp) => {
             const roomSockets = nsp.adapter.rooms.get(roomCode);
             const hostId = Array.from(roomSockets)[0];
 
-            nsp.to(hostId).emit("syncVideo", socket.id);
+            nsp.to(hostId).emit("videoSyncRequest", socket.id);
         });
 
-        socket.on("videoInfo", (targetId, videoInfo) => {
+        socket.on("videoSyncResponse", (targetId, videoInfo) => {
             nsp.to(targetId).emit("videoInfo", videoInfo);
         });
     });
