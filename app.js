@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
-import http from "http";
+import fs from "fs";
+import https from "https";
 import { Server as SocketIOServer } from "socket.io";
 import { PORT } from "./libs/constants.js";
 import { customResponse } from "./libs/middlewares.js";
@@ -10,13 +11,18 @@ import index from "./routes/index.js";
 import rooms from "./routes/rooms.js";
 import shanbay from "./routes/shanbay.js";
 
+const options = {
+    cert: fs.readFileSync("E:/Administrator/Documents/ssl/server.crt"),
+    key: fs.readFileSync("E:/Administrator/Documents/ssl/server.key"),
+};
+
 // 创建服务器实例
 const app = express();
-const server = http.createServer(app);
+const server = https.createServer(options, app);
 const io = new SocketIOServer(server, {
     path: "/rooms",
     cors: {
-        origin: ["http://localhost:5173", "http://nickyzj.run:2333"],
+        origin: ["http://localhost:3000", "https://nickyzj.run:2334"],
     },
     connectionStateRecovery: {},
 });
@@ -39,4 +45,4 @@ app.use("/animes", animes);
 rooms(io.of("/"));
 
 // 启动服务器
-server.listen(PORT, () => console.log(`服务器已启动：http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`服务器已启动：https://nickyzj.run:${PORT}`));

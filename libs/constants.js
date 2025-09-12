@@ -8,6 +8,6 @@ export const PORT = 3030;
 export const PAGE_SIZE = 24;
 
 /** dufs 服务器地址 */
-export const WEBDAV_URL = "http://nickyzj.run:2020";
+export const WEBDAV_URL = "https://nickyzj.run:2020";
 /** dufs 服务器本地路径 */
 export const WEBDAV_PATH = "E:/Storage";
