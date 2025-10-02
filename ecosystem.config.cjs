@@ -2,7 +2,7 @@ module.exports = {
     apps: [
         {
             name: "amadeus",
-            script: "app.js",
+            script: "dist/bundle.cjs",
             time: true,
         }
     ],
