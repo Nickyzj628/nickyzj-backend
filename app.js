@@ -11,6 +11,12 @@ import index from "./routes/index.js";
 import rooms from "./routes/rooms.js";
 import shanbay from "./routes/shanbay.js";
 
+const ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://localhost:2334",
+    "https://nickyzj.run:2334",
+];
+
 const options = {
     cert: fs.readFileSync("E:/Administrator/Documents/ssl/server.crt"),
     key: fs.readFileSync("E:/Administrator/Documents/ssl/server.key"),
@@ -22,7 +28,7 @@ const server = https.createServer(options, app);
 const io = new SocketIOServer(server, {
     path: "/rooms",
     cors: {
-        origin: ["http://localhost:3000", "https://nickyzj.run:2334"],
+        origin: ALLOWED_ORIGINS,
     },
     connectionStateRecovery: {},
 });
@@ -30,7 +36,16 @@ const io = new SocketIOServer(server, {
 // 前置中间件
 app.use(
     // 跨域
-    cors(),
+    cors({
+        origin: (origin, callback) => {
+            // 允许白名单里的源、同源请求访问
+            if (ALLOWED_ORIGINS.includes(origin) || origin === undefined) {
+                callback(null, true);
+            } else {
+                callback(new Error("跨域请求已被拦截"));
+            }
+        },
+    }),
     // 解析 application/json 格式的请求 body
     express.json({ limit: "1mb" }),
     // 自定义 success 和 fail 方法

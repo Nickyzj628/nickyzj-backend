@@ -24,5 +24,10 @@
 	},
 	"devDependencies": {
 		"rolldown": "1.0.0-beta.41"
-	}
+	},
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "sharp"
+        ]
+    }
 }
